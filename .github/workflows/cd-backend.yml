@@ -50,7 +50,7 @@ jobs:
         with:
           task-definition: ecs-taskdef.json
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ needs.build_and_push.outputs.image }}
+          image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
       - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.render.outputs.task-definition }}
@@ -84,7 +84,7 @@ jobs:
         with:
           task-definition: ecs-taskdef.json
           container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ needs.build_and_push.outputs.image }}
+          image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
       - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.render.outputs.task-definition }}
