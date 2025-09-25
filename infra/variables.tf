@@ -13,7 +13,7 @@ variable "region" {
 variable "desired_count" {
   description = "Desired task count for ECS services"
   type        = number
-  default     = 0
+  default     = 1
 }
 
 
