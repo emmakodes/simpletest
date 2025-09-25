@@ -15,7 +15,8 @@ resource "aws_lb" "prod" {
 }
 
 resource "aws_lb_target_group" "staging" {
-  name     = "${var.project}-staging-tg"
+  name_prefix = "stg-"
+  target_type = "ip"
   port     = 8000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -27,10 +28,14 @@ resource "aws_lb_target_group" "staging" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_lb_target_group" "prod" {
-  name     = "${var.project}-prod-tg"
+  name_prefix = "prd-"
+  target_type = "ip"
   port     = 8000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -41,6 +46,9 @@ resource "aws_lb_target_group" "prod" {
     interval            = 15
     healthy_threshold   = 2
     unhealthy_threshold = 2
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
