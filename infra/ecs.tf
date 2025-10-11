@@ -1,44 +1,52 @@
 resource "aws_ecs_cluster" "this" {
-  name = "${var.project}-cluster"
+  name = "todo-${var.env}-cluster"
 }
 
-resource "aws_ecs_task_definition" "backend" {
-  family                   = "${var.project}-backend"
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
+resource "aws_security_group" "ecs_service" {
+  name   = "todo-${var.env}-ecs-sg"
+  vpc_id = aws_vpc.main.id
 
-  container_definitions = jsonencode([
-    {
-      name  = "web",
-      image = "${aws_ecr_repository.backend.repository_url}:initial",
-      essential = true,
-      portMappings = [
-        {
-          containerPort = 8000,
-          protocol      = "tcp"
-        }
-      ],
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          awslogs-region        = var.region,
-          awslogs-group         = aws_cloudwatch_log_group.app.name,
-          awslogs-stream-prefix = "web"
-        }
-      },
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"],
-        interval    = 10,
-        timeout     = 5,
-        retries     = 3,
-        startPeriod = 10
-      }
+  ingress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_iam_role" "ecs_task_execution" {
+  name               = "todo-${var.env}-ecs-task-exec"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_trust.json
+}
+
+data "aws_iam_policy_document" "ecs_task_trust" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
     }
-  ])
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_exec_policy" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_ecr_repository" "backend" {
+  name = "todo-backend"
+}
+
+resource "aws_ecr_repository" "frontend" {
+  name = "todo-frontend"
 }
 
 
