@@ -100,10 +100,8 @@ resource "aws_ecs_task_definition" "frontend" {
           awslogs-stream-prefix = "frontend"
         }
       }
-      environment = [
-        { name = "NEXT_PUBLIC_BACKEND_URL", value = "http://${aws_lb.app.dns_name}" }
-      ]
-      command = ["npm","run","dev"]
+      environment = []
+      command = ["npm","run","start"]
       workingDirectory = "/app"
     }
   ])
