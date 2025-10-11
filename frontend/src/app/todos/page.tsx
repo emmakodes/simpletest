@@ -10,14 +10,18 @@ export default function TodosPage() {
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [lastOkAt, setLastOkAt] = useState<number>(0);
+  const [lastErrAt, setLastErrAt] = useState<number>(0);
 
   const load = async () => {
     setError(null);
     try {
       const data = await api<Todo[]>("/todos/");
       setTodos(data);
+      setLastOkAt(Date.now());
     } catch (e: unknown) {
       setError(getErrorMessage(e));
+      setLastErrAt(Date.now());
     }
   };
 
@@ -37,9 +41,11 @@ export default function TodosPage() {
       setTitle("");
       setDescription("");
       setError(null);
+      setLastOkAt(Date.now());
       await load();
     } catch (e: unknown) {
       setError(getErrorMessage(e));
+      setLastErrAt(Date.now());
     } finally {
       setBusy(false);
     }
@@ -52,9 +58,11 @@ export default function TodosPage() {
         method: "PATCH",
         body: JSON.stringify({ completed }),
       });
+      setLastOkAt(Date.now());
       await load();
     } catch (e: unknown) {
       setError(getErrorMessage(e));
+      setLastErrAt(Date.now());
     }
   };
 
@@ -62,9 +70,11 @@ export default function TodosPage() {
     setError(null);
     try {
       await api(`/todos/${id}`, { method: "DELETE" });
+      setLastOkAt(Date.now());
       await load();
     } catch (e: unknown) {
       setError(getErrorMessage(e));
+      setLastErrAt(Date.now());
     }
   };
 
@@ -87,7 +97,9 @@ export default function TodosPage() {
         <button onClick={createTodo} disabled={busy} style={{ padding: "8px 12px", background: busy ? "#555" : "#222", color: "#fff", borderRadius: 4, opacity: busy ? 0.7 : 1 }}>Add</button>
         <button onClick={() => { localStorage.removeItem("token"); window.location.href = "/login"; }} style={{ padding: "8px 12px", background: "#777", color: "#fff", borderRadius: 4 }}>Logout</button>
       </div>
-      {error && <div style={{ color: "#b00020", marginTop: 8 }}>{error}</div>}
+      {error && lastErrAt > lastOkAt && (
+        <div style={{ color: "#b00020", marginTop: 8 }}>{error}</div>
+      )}
       <ul style={{ marginTop: 16 }}>
         {todos.map((t) => (
           <li key={t.id} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
