@@ -72,7 +72,7 @@ resource "aws_lb_listener_rule" "backend_forward" {
     target_group_arn = aws_lb_target_group.backend.arn
   }
   condition {
-    path_pattern { values = ["/ping", "/auth*", "/todos*", "/docs*", "/openapi.json"] }
+    path_pattern { values = ["/ping", "/api/*", "/docs*", "/openapi.json"] }
   }
 }
 
