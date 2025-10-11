@@ -19,6 +19,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
       - name: Run backend tests
+        env:
+          PYTHONPATH: backend
         run: |
           pytest -q backend/tests
 

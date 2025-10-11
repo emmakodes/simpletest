@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { api, Todo } from "@/lib/api";
 
+const getErrorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
 export default function TodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState("");
@@ -14,8 +16,8 @@ export default function TodosPage() {
     try {
       const data = await api<Todo[]>("/todos/");
       setTodos(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     }
   };
 
@@ -33,8 +35,8 @@ export default function TodosPage() {
       setTitle("");
       setDescription("");
       await load();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     }
   };
 
@@ -46,8 +48,8 @@ export default function TodosPage() {
         body: JSON.stringify({ completed }),
       });
       await load();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     }
   };
 
@@ -56,8 +58,8 @@ export default function TodosPage() {
     try {
       await api(`/todos/${id}`, { method: "DELETE" });
       await load();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     }
   };
 
