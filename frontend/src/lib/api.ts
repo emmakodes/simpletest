@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || ""; // same-origin by default
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -7,7 +7,8 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
-  const res = await fetch(`${BACKEND_URL}${path}`, {
+  const base = BACKEND_URL || "";
+  const res = await fetch(`${base}${path.startsWith('/api') ? path : `/api${path}`}` , {
     ...options,
     headers,
   });
