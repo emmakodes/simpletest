@@ -23,6 +23,10 @@ app.add_middleware(
 def ping():
     return {"status": "ok"}
 
+@app.get("/api/ping")
+def ping_api():
+    return {"status": "ok"}
+
 
 @app.on_event("startup")
 def on_startup():
