@@ -9,6 +9,7 @@ export default function TodosPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     setError(null);
@@ -25,6 +26,8 @@ export default function TodosPage() {
   }, []);
 
   const createTodo = async () => {
+    if (!title.trim()) return;
+    setBusy(true);
     setError(null);
     try {
       await api<Todo>("/todos/", {
@@ -33,9 +36,12 @@ export default function TodosPage() {
       });
       setTitle("");
       setDescription("");
+      setError(null);
       await load();
     } catch (e: unknown) {
       setError(getErrorMessage(e));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -78,7 +84,7 @@ export default function TodosPage() {
           onChange={(e) => setDescription(e.target.value)}
           style={{ padding: 8, border: "1px solid #ccc", borderRadius: 4, minWidth: 260 }}
         />
-        <button onClick={createTodo} style={{ padding: "8px 12px", background: "#222", color: "#fff", borderRadius: 4 }}>Add</button>
+        <button onClick={createTodo} disabled={busy} style={{ padding: "8px 12px", background: busy ? "#555" : "#222", color: "#fff", borderRadius: 4, opacity: busy ? 0.7 : 1 }}>Add</button>
         <button onClick={() => { localStorage.removeItem("token"); window.location.href = "/login"; }} style={{ padding: "8px 12px", background: "#777", color: "#fff", borderRadius: 4 }}>Logout</button>
       </div>
       {error && <div style={{ color: "#b00020", marginTop: 8 }}>{error}</div>}
