@@ -34,11 +34,13 @@ resource "aws_ecs_task_definition" "backend" {
         }
       }
       environment = [
-        { name = "DATABASE_URL", value = "postgresql://app:app-password-change@${aws_db_instance.postgres.address}:5432/todo" },
         { name = "REDIS_URL", value = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:6379/0" },
-        { name = "JWT_SECRET", value = "change-me" },
         { name = "KAFKA_BROKER", value = "unused-for-now" },
         { name = "KAFKA_TOPIC", value = "todo-events" }
+      ]
+      secrets = [
+        { name = "DATABASE_URL", valueFrom = aws_ssm_parameter.db_url.arn },
+        { name = "JWT_SECRET",  valueFrom = aws_ssm_parameter.jwt_secret.arn }
       ]
     }
   ])
