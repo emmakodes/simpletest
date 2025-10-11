@@ -1,5 +1,6 @@
 locals {
   backend_image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/todo-backend:latest"
+  frontend_image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/todo-frontend:latest"
 }
 
 data "aws_caller_identity" "current" {}
@@ -72,6 +73,59 @@ resource "aws_lb_listener_rule" "backend_forward" {
   }
   condition {
     path_pattern { values = ["/*"] }
+  }
+}
+
+# Frontend Fargate service (Next.js dev server for simplicity)
+resource "aws_ecs_task_definition" "frontend" {
+  family                   = "todo-${var.env}-frontend"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.task_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "frontend"
+      image     = local.frontend_image
+      essential = true
+      portMappings = [{ containerPort = 3000, hostPort = 3000, protocol = "tcp" }]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs.name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "frontend"
+        }
+      }
+      environment = [
+        { name = "NEXT_PUBLIC_BACKEND_URL", value = "http://${aws_lb.app.dns_name}" }
+      ]
+      command = ["npm","run","dev"]
+      workingDirectory = "/app"
+    }
+  ])
+}
+
+resource "aws_ecs_service" "frontend" {
+  name            = "todo-frontend-svc"
+  cluster         = aws_ecs_cluster.this.id
+  task_definition = aws_ecs_task_definition.frontend.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = [for s in aws_subnet.private : s.id]
+    security_groups = [aws_security_group.ecs_service.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.frontend.arn
+    container_name   = "frontend"
+    container_port   = 3000
   }
 }
 

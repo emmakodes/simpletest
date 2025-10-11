@@ -51,17 +51,33 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "ALB up"
-      status_code  = "200"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend.arn
   }
 }
 
 output "alb_dns_name" {
   value = aws_lb.app.dns_name
+}
+
+# Frontend target group for Next.js (port 3000)
+resource "aws_lb_target_group" "frontend" {
+  name_prefix = "tg-"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+  lifecycle {
+    create_before_destroy = true
+  }
+  health_check {
+    path                = "/"
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    interval            = 30
+    timeout             = 5
+    matcher             = "200-399"
+  }
 }
 
 
