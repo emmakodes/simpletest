@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 
+const getErrorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,8 +18,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       await login();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     }
   };
 
@@ -30,8 +32,8 @@ export default function LoginPage() {
       });
       localStorage.setItem("token", res.access_token);
       window.location.href = "/todos";
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     }
   };
 
