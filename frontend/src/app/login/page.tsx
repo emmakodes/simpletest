@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+const getErrorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 const getErrorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
 

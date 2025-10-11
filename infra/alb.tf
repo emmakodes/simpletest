@@ -27,10 +27,14 @@ resource "aws_lb" "app" {
 }
 
 resource "aws_lb_target_group" "backend" {
-  name     = "todo-${var.env}-tg-backend"
-  port     = 8000
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
+  name_prefix = "tg-"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip" # required for ECS Fargate (awsvpc)
+  lifecycle {
+    create_before_destroy = true
+  }
   health_check {
     path                = "/ping"
     healthy_threshold   = 2
